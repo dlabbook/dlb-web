@@ -1,0 +1,122 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="bootstrap.min.js"></script>
+        <link rel="stylesheet" href="bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="bootstrap-theme.min.css" type="text/css" />
+        <script type="text/javascript" src="web3.min.js"></script>
+        <script type="text/javascript" src="ipfsapi.min.js"></script>
+        <script type="text/javascript" src="contRegAbi.js"></script>
+        <script type="text/javascript" src="nameRegAbi.js"></script>
+        <script type="text/javascript" src="dlabbook.js"></script>
+
+        <title>Distributed Smart Lab Book on Ethereum and IPFS</title>
+    </head>
+    
+    <body>
+      <div class="container">
+        
+      <!-- top menu bar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">&#x0110;LabBook</a>
+          </div>
+          <div>
+            <ul class="nav navbar-nav">
+              <li><a href="#" class="dlbheaderclick" id="navPublish">Publish</a></li>
+              <li><a href="#" class="dlbheaderclick" id="navBrowse">Browse</a></li>
+              <li><a href="#" class="dlbheaderclick" id="navSign">Sign</a></li> 
+              <li><a href="#" class="dlbheaderclick" id="navDebug">Debug</a></li> 
+              <li><a href="#" class="dlbheaderclick" id="navSettings">Settings</a></li> 
+              <li><a href="#" class="dlbheaderclick" id="navEdit">Development</a></li> 
+            </ul>
+          </div>
+        </div>
+      </nav>
+      
+      <!-- Pubblish -->
+      <div class="row dlbcontent" id="contentPublish">
+        <div class="col-md-8" id="c1">
+          <textarea id="dataToPublish" rows="5" style="width: 100%;" placeholder="This is your lab book, write some entry here and submit it to the blockchain. Later we will also enable to drag-drop entire files into here. ..." required></textarea>
+        </div>
+        <div class="col-md-4" id="c2">
+          <input type="password" id="pwd1" placeholder="password for encryption">
+          <input type="password" id="pwd2" placeholder="confirm password">
+          <button id="buttonPublish">publish (currently plaintext without encryption)</button>
+          <div id="ipfsPublishInfo">published on IPFS with hash: </div>
+        </div>
+      </div>
+
+      <!-- Browse -->
+      <div class="row dlbcontent" id="contentBrowse">
+        <div class="col-md-6">
+          <h2>Your published content:</h2>
+          <button id="reloadOwnContent">reload content</button>
+          <div id="ownContentBrowse"></div>
+        </div>
+        <div class="col-md-6">
+          <h2>Browse other content:</h2>
+          <button id="reloadOtherContent">reload content</button>
+          <input type="text" id="otherAddressBrowse" value="0xdedb49385ad5b94a16f236a6890cf9e0b1e30392">
+          <div id="otherContentBrowse"></div>
+        </div>
+      </div>
+      
+      <!-- Sign -->
+      <div class="row dlbcontent" id="contentSign">
+        <div class="col-md-6">sign content</div>
+        <div class="col-md-6">some other content</div>
+      </div>
+
+      <!-- Debug -->
+      <div class="row dlbcontent" id="contentDebug">
+        <div class="col-md-6">debug content</div>
+        <div class="col-md-6" id="debug" style="font-family: 'Courier New'; background-color: #000000; color: #00ff00">
+          debug output:<br />--------------------------------<br /><br />
+        </div>
+      </div>
+      
+      <!-- Settings -->
+      <div class="row dlbcontent" id="contentSettings">
+        <div class="col-md-6">
+          <h2>IPFS settings</h2>
+          address of IPFS node:<br />
+          <input type="text" id="ipfsAddress" style="width: 100%;" value="localhost">
+          <button id="updateIpfsAddress">save</button>
+          <div id="ipfsDebug"></div>
+        </div>
+        <div class="col-md-6">
+          <h2>Ethereum settings</h2>
+          email-address or username for identification:
+          <input type="text" id="username" ><br /><br />
+          address of geth node:<br />
+          <input type="text" id="gethAddress" style="width: 100%;" value="localhost:8545">
+          <button id="updateGethAddress">save</button>
+          <div id="gethDebug"></div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="row dlbcontent" id="contentEdit">
+        <div class="col-md-10">
+			<h2>solidity editor</h2>
+			<textarea id="solidityCode" rows="5" style="width: 100%;" placeholder="contract test { function multiply(uint a) returns(uint d) { return a * 7; } }" required></textarea>
+		</div>
+        <div class="col-md-2">
+			<h2>deploy</h2>
+			last block: <div id="lastBlock"></div>
+			<button id="buttonCompile">compile</button>
+			<div id="compiledAbi"></div>
+			<div id="compiledCode"></div>
+			<button id="buttonDeploy">deploy</button>
+			<div id="contractAddress"></div>
+      </div>
+      
+    </div>
+    </body>
+</html>	
