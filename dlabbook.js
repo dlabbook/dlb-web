@@ -91,19 +91,19 @@ $(function(){
     });
 
     // hide all content except for publish on start
+    $("#contentPublish").hide();
     $("#contentBrowse").hide();
     $("#contentSign").hide();
     $("#contentDebug").hide();
     $("#contentSettings").hide();
-    $("#contentEdit").hide();
+    //$("#contentEdit").hide();
     
     $("#ipfsPublishInfo").hide();   // only visible once we publish something to IPFS
    
     // create web3 object if required
 	if(typeof web3 === 'undefined')
 	{
-        $("#debug").append(document.createTextNode("creating web3..."));
-        $("#debug").append("<br />");
+        info("creating web3...");
 		updateGethAddress();
 
         // define address of the contract (e.g. copy from sandbox)
@@ -127,18 +127,14 @@ $(function(){
 		//                      |--> we can connect to the sandbox from remote therefore this shouldnt be necessary (for the hackaton)
 		//                          but might be a nice test-setup in the long run
 		
-        $("#debug").append(document.createTextNode("created web3"));
-        $("#debug").append("<br />");
 		if (!web3.isConnected())
 		{
-            $("#debug").append(document.createTextNode("web3 not connected"));
-            $(".container").prepend("<div class='alert alert-danger alert-dismissible' role='alert'role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>Error!</strong> Could not connect to Ethereum node. Make sure you have geth running locally and start it with 'geth --rpc --rpccorsdomain \"*\"'.</div>");
+            error("Web3 could not connect to Ethereum node. Make sure you have geth running locally and start it with 'geth --rpc --rpccorsdomain '*' --rpcaddr 0.0.0.0'");
 		}
 		else
 		{
-            $("#debug").append(document.createTextNode("connected to web3"));
+            info("connected to web3");
 		}
-        $("#debug").append("<br />");
 	}
 	
 	// check if IPFS is available (by attempting to write one byte to it)
@@ -151,25 +147,19 @@ $(function(){
     	ipfs.add(buf, function(err, res){
             if (err || !res)
             {
-                console.log(err)
-                $("#debug").append(document.createTextNode("ipfs error: " + err));
-                $("#debug").append("<br />");
+				error("ipfs error: " + err);
                 // this is async, so we cannot throw the error as the catch block below is already done.
                 // render error again
 
-                // TODO: make function to render error and pass extra error info
-                $(".container").prepend("<div class='alert alert-danger alert-dismissible' role='alert'role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>Error1!</strong> Could not connect to IPFS node. Make sure <ul><li>you have IPFS running on your local machine, start it with 'ipfs daemon'</li><li>before you start the daemon, set the cors domain with 'ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"'</li></ul></div>");
+                error("Could not connect to IPFS node. Make sure <ul><li>you have IPFS running on your local machine, start it with 'ipfs daemon'</li><li>before you start the daemon, set the cors domain with 'ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"'</li></ul></div>");
                 return;
             }
-            $("#debug").append("connected to local IPFS node");
-            $("#debug").append("<br />");
+            info("connected to local IPFS node");
     	})
 	}
 	catch (err)
 	{
-        $(".container").prepend("<div class='alert alert-danger alert-dismissible' role='alert'role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>Error1!</strong> Could not connect to IPFS node. Make sure <ul><li>you have IPFS running on your local machine, start it with 'ipfs daemon'</li><li>before you start the daemon, set the cors domain with 'ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"'</li></ul></div>");
-        $("#debug").append(document.createTextNode("cannot connect to local IPFS node."));
-        $("#debug").append("<br />");
+        error("Could not connect to IPFS node. Make sure <ul><li>you have IPFS running on your local machine, start it with 'ipfs daemon'</li><li>before you start the daemon, set the cors domain with 'ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"'</li></ul></div>");
 	}
 	
     $("#buttonPublish").button().click(function(event){
@@ -227,25 +217,75 @@ $(function(){
 		reloadOwnContent();
 	})
 	
+	$("#buttonCompile").click(function(event){
+		var source = editor.getSession().getValue();
+		try
+		{
+			compiled = web3.eth.compile.solidity(source);
+
+			for (var contractName in compiled)
+			{	// looping over all contracts (we might have more than one contract in code base)
+				info("found contract: " + contractName);
+				contractJson = eval("compiled." + contractName);
+
+				// todo:
+				//		do not overwrite but append
+				//		dynamically create multi-contract deploy
+				
+				// implementation:
+				//		write abi and code into array of objects (abi + code pair)
+				//		dynamically create elements into which abis + codes are written
+				//		on click "deploy", deploy all contracts
+				//		dynamically create elements into which address is written
+				abi = contractJson.info.abiDefinition;
+				evmCode = contractJson.code;
+				$("#compiledAbi").text(JSON.stringify(abi));
+				$("#compiledCode").text(evmCode);
+			}
+		}
+		catch (e)
+		{
+			error("Compile error: " + e);
+		}
+	})
+	
+	$("#buttonDeploy").click(function(event){
+		var primaryAddress = web3.eth.accounts[0];
+		// todo: make sure that abi is defined
+		var MyContract = web3.eth.contract(abi);
+		contract = MyContract.new({from: primaryAddress, data: evmCode})
+		$("#contractAddress").text("[waiting for contract to be mined...]");
+	})
+	
+	editor = ace.edit("editor");
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/javascript");
+	editor.getSession().setUseWorker(false);	// disable syntax checker since we just use the javascript version which does not know contracts and other solidity-only features
+	
 	setInterval(updateLastBlockCounter, 2000);
-	
-	/* TODO:
-		add click handlers for:
-		- compile (compiles remote, then outputs error message or abi + code)
-			later:
-			- stores code in cookie data
-			- optionally stores on IPFS
-			- optionally publishes hash in contract on Ethereum main net under corresponding contract address
-		- deploy (deploys contract from default address, then outputs error message or address)
-	
-	Issue:
-	- it seems mining gets harder over time, how can we force the block time to remain under 1s in local private net?
-	*/
 });
 
 function updateLastBlockCounter()
 {
-	$("#lastBlock").text(web3.eth.blockNumber);
+	try
+	{
+		var blkNo = web3.eth.blockNumber;
+		$("#lastBlockNumber").text(blkNo);
+		var latestBlk = web3.eth.getBlock("latest")
+		var blkTime = latestBlk.timestamp - web3.eth.getBlock(latestBlk.number - 1).timestamp;
+		$("#lastBlockTime").text(blkTime);
+		$("#lastBlockTx").text(latestBlk.transactions.length);
+		$("#pendingTx").text(web3.eth.getBlock("pending", true).transactions.length);
+		$("#hashRate").text(web3.eth.hashrate);
+		if (typeof contract === 'undefined')
+			$("#contractAddress").text("[contract not deployed]");
+		else
+			$("#contractAddress").text(contract.address);
+	}
+	catch (e)
+	{
+		$("#lastBlockNumber").text("error: " + e);
+	}
 }
 
 function reloadOwnContent()
@@ -281,20 +321,46 @@ function updateGethAddress()
 {
     var gethAddress = $("#gethAddress").val();
     web3 = new Web3(new Web3.providers.HttpProvider(gethAddress));
-	console.log("Set geth node address to: " + gethAddress);
+	info("set geth node address to: " + gethAddress);
 	//console.log("Found the following accounts: " + web3.eth.accounts);
 	//$("#gethDebug").append("Found the following accounts: " + web3.eth.accounts);
-	console.log("Latest block number: " + web3.eth.blockNumber);
-	$("#gethDebug").append("Latest block number: " + web3.eth.blockNumber + "<br />");
-	
-    web3.eth.defaultAccount = defaultAccount;
-    instanceContReg = web3.eth.contract(contRegAbi).at(contRegContractAddress);
-    instanceNameReg = web3.eth.contract(nameRegAbi).at(nameRegContractAddress);
+	try
+	{
+		info("latest block number: " + web3.eth.blockNumber);
+		
+		//web3.eth.defaultAccount = defaultAccount;
+		//instanceContReg = web3.eth.contract(contRegAbi).at(contRegContractAddress);
+		//instanceNameReg = web3.eth.contract(nameRegAbi).at(nameRegContractAddress);
+	}
+	catch (e)
+	{
+		error(e);
+	}
 }
 
 function updateIpfsAddress()
 {
     var ipfsAddress = $("#ipfsAddress").val();
 	ipfs = ipfsAPI(ipfsAddress);
-    console.log("Set ipfs node address to: " + ipfsAddress);
+    info("Set ipfs node address to: " + ipfsAddress);
+}
+
+function error(msg)
+{	// displays an error message in browser console, as bootstrap error message and in debug tab
+	console.log("Error: " + msg)
+	$(".container").prepend("<div class='alert alert-danger alert-dismissible' role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>Error!</strong><br />" + msg + "</div>");
+	$("#debug").append(document.createTextNode("Error: " + msg));
+	$("#debug").append("<br />");
+}
+
+function info(msg)
+{	// displays an info message in browser console and in debug tab
+	console.log("Info: " + msg)
+	
+	// todo: we might want to pop up if we enable debug mode or increased verbosity
+			// but then it should be an info and not alert class
+			
+	$(".container").prepend("<div class='alert alert-danger alert-dismissible' role='alert'><button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button><strong>Info:</strong><br />" + msg + "</div>");
+	$("#debug").append(document.createTextNode("Info: " + msg));
+	$("#debug").append("<br />");
 }
