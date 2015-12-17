@@ -12,7 +12,11 @@
         <script type="text/javascript" src="ipfsapi.min.js"></script>
         <script type="text/javascript" src="contRegAbi.js"></script>
         <script type="text/javascript" src="nameRegAbi.js"></script>
+		<script type="text/javascript" src="ace/ace.js" charset="utf-8"></script>
+		<script type="text/javascript" src="ace/mode-javascript.js" charset="utf-8"></script>
+		<script type="text/javascript" src="ace/theme-twilight.js" charset="utf-8"></script>
         <script type="text/javascript" src="dlabbook.js"></script>
+
 
         <title>Distributed Smart Lab Book on Ethereum and IPFS</title>
     </head>
@@ -95,7 +99,7 @@
           email-address or username for identification:
           <input type="text" id="username" ><br /><br />
           address of geth node:<br />
-          <input type="text" id="gethAddress" style="width: 100%;" value="localhost:8545">
+          <input type="text" id="gethAddress" style="width: 100%;" value="http://46.101.178.22:8545">
           <button id="updateGethAddress">save</button>
           <div id="gethDebug"></div>
         </div>
@@ -103,18 +107,71 @@
 
       <!-- Editor -->
       <div class="row dlbcontent" id="contentEdit">
-        <div class="col-md-10">
+        <div class="col-md-8">
 			<h2>solidity editor</h2>
-			<textarea id="solidityCode" rows="5" style="width: 100%;" placeholder="contract test { function multiply(uint a) returns(uint d) { return a * 7; } }" required></textarea>
+				<pre id="editor" class="editor" style="height: 500px;">
+contract test 
+{
+	function multiply(uint a) returns(uint d) 
+	{ 
+		return a * 7; 
+	} 
+}
+			</pre>
 		</div>
-        <div class="col-md-2">
-			<h2>deploy</h2>
-			last block: <div id="lastBlock"></div>
-			<button id="buttonCompile">compile</button>
-			<div id="compiledAbi"></div>
-			<div id="compiledCode"></div>
-			<button id="buttonDeploy">deploy</button>
-			<div id="contractAddress"></div>
+        <div class="col-md-4">
+			<div class="row" id="contentEdit">
+				<div class="row">
+					<div class="col-md-12"><h2>deploy</h2></div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<button id="buttonCompile">compile</button>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-2">abi:</div>
+					<div class="col-md-10" id="compiledAbi" style="word-break: break-all;">[click 'compile' to generate abi]</div>
+				</div>
+				<div class="row">
+					<div class="col-md-2">code:</div>
+					<div class="col-md-10" id="compiledCode" style="word-break: break-all;">[click 'compile' to generate code]</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<button id="buttonDeploy">deploy</button>
+					</div>
+				</div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">address:</div>
+					<div class="col-md-8" id="contractAddress" style="word-break: break-all;">[contract not deployed]</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12"><h2>test net info</h2></div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">block height:</div>
+					<div class="col-md-8" id="lastBlockNumber"></div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">block time [s]:</div>
+					<div class="col-md-8" id="lastBlockTime"></div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">transactions in block:</div>
+					<div class="col-md-8" id="lastBlockTx"> </div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">pending transactions:</div>
+					<div class="col-md-8" id="pendingTx"></div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">hash rate:</div>
+					<div class="col-md-8" id="hashRate"></div>
+				</div>
+			</div>
+			
       </div>
       
     </div>
